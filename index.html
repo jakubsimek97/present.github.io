@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Moje testovací stránka</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      display: flex;
+      max-width: 800px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .buttons {
+      flex: 1;
+      background: #eee;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .buttons button {
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background: #4CAF50;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .buttons button:hover {
+      background: #45a049;
+    }
+    .output {
+      flex: 2;
+      padding: 20px;
+      font-size: 18px;
+      color: #444;
+    }
+    .placeholder {
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Vyber si koho obdaruješ</h1>
+  <p style="text-align:center;">
+    Klikni a pravo uvidíš, kdo od tebe dostane dárek.
+  </p>
+
+  <div class="container">
+    <div class="buttons">
+      <button onclick="showText(1)">Marta</button>
+      <button onclick="showText(2)">Martin</button>
+      <button onclick="showText(3)">Kuba</button>
+      <button onclick="showText(4)">Martina</button>
+      <button onclick="showText(5)">Michal</button>
+    </div>
+    <div class="output" id="output">
+      <span class="placeholder">Zatím nic nebylo vybráno...</span>
+    </div>
+  </div>
+
+  <script>
+    function showText(num) {
+      const texts = {
+        1: "Michal",
+        2: "Marta",
+        3: "Martin",
+        4: "Kuba",
+        5: "Martina"
+      };
+      document.getElementById("output").textContent = texts[num];
+    }
+  </script>
+
+</body>
+</html>
