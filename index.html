@@ -1,178 +1,345 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">
-  <title>Vyber, komu dáš dárek</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-      background: #f5f5f5;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    .container {
-      display: flex;
-      max-width: 800px;
-      margin: 20px auto;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-    .buttons {
-      flex: 1;
-      background: #eee;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .buttons button {
-      padding: 12px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      background: #4CAF50;
-      color: white;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .buttons button:hover {
-      background: #45a049;
-    }
-    .output {
-      flex: 2;
-      padding: 20px;
-      font-size: 18px;
-      color: #444;
-    }
-    .placeholder {
-      color: #aaa;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gender reveal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #4A90E2;
+            --secondary-pink: #E94E77;
+            --text-color: #000000;
+            --label-color: #333;
+            --card-bg: #ffffff;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-strong: rgba(0, 0, 0, 0.2);
+            --baby-icon-size: 80px;
+            --offset: -10px;
+        }
 
-    /* Modal styl */
-    .modal {
-      display: none; /* skryté defaultně */
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      background: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      text-align: center;
-      max-width: 400px;
-      width: 90%;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-      animation: fadeIn 0.3s ease;
-    }
-    .modal-buttons {
-      margin-top: 20px;
-      display: flex;
-      justify-content: space-around;
-    }
-    .modal-buttons button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .btn-yes {
-      background: #4CAF50;
-      color: white;
-    }
-    .btn-yes:hover {
-      background: #45a049;
-    }
-    .btn-no {
-      background: #ccc;
-      color: #333;
-    }
-    .btn-no:hover {
-      background: #bbb;
-    }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #e0f7fa 0%, #bbdefb 100%);
+            font-family: 'Poppins', sans-serif;
+            perspective: 1000px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.9); }
-      to { opacity: 1; transform: scale(1); }
-    }
-  </style>
+        .date-card {
+            background-color: var(--card-bg);
+            padding: 50px 70px;
+            border-radius: 20px;
+            box-shadow: 0 15px 45px var(--shadow-light);
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.27), box-shadow 0.6s ease;
+            position: relative;
+            overflow: visible;
+            z-index: 0;
+            width: 420px; /* pevná šířka pro konzistentní kreslení canvasu */
+            height: 260px; /* pevná výška pro konzistentní kreslení canvasu */
+            box-sizing: border-box;
+        }
+
+        .date-card:hover {
+            transform: translateY(-10px) rotateX(2deg) scale(1.03);
+            box-shadow: 0 25px 55px var(--shadow-strong);
+        }
+
+        .date-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            padding: 5px;
+            background: linear-gradient(135deg, var(--secondary-pink), var(--primary-blue));
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* reveal (podklad) */
+        #reveal-card {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3.8em;
+            font-weight: 800;
+            color: #E94E77;
+            z-index: 0;
+            user-select: none;
+        }
+
+        /* vrstva, která bude "stírat" (canvas) - z-index mezi reveal a ikonami */
+        #scratch {
+    position: absolute;
+    left: 5px;   /* odsazení od rámečku */
+    top: 5px;
+    width: calc(100% - 10px);  /* ohraničení nepřekryje */
+    height: calc(100% - 10px);
+    border-radius: 15px; /* menší než hlavní rádius */
+    z-index: 2;
+    touch-action: none;
+    cursor: pointer;
+}
+
+        /* Původní text (skryjeme, protože kreslíme kopii na canvas) */
+        #display-date {
+            font-size: 4em;
+            font-weight: 800;
+            color: var(--text-color);
+            margin: 10px 0;
+            letter-spacing: 3px;
+            position: absolute; /* necháme v DOM pro přístup, ale skryjeme */
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+            opacity: 0; /* skryto; visual kopii kreslí canvas */
+            pointer-events: none;
+        }
+
+        .date-label {
+            font-size: 1.2em;
+            font-weight: 300;
+            color: var(--label-color);
+            margin-bottom: 5px;
+            opacity: 0.8;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(74, 144, 226, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(74, 144, 226, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(74, 144, 226, 0); }
+        }
+
+        .date-card {
+            animation: pulse 2s infinite;
+        }
+
+        .baby-icon {
+            position: absolute;
+            width: var(--baby-icon-size);
+            height: var(--baby-icon-size);
+            object-fit: cover;
+            border-radius: 50%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            z-index: 5; /* nad canvasem */
+        }
+
+        .girl-icon {
+            top: var(--offset);
+            left: var(--offset);
+            border: 5px solid var(--secondary-pink);
+        }
+
+        .boy-icon {
+            bottom: var(--offset);
+            right: var(--offset);
+            border: 5px solid var(--primary-blue);
+        }
+
+        .date-card:hover .baby-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+    </style>
 </head>
 <body>
 
-  <h1>Zjisti, koho obdaruješ</h1>
-  <p style="text-align:center;">
-    Klikni a vpravo uvidíš, kdo od tebe dostane dárek.
-  </p>
+    <div class="date-card" id="cardRoot">
+        <!-- podklad, který se odkrývá -->
+        <div id="reveal-card">Rút</div>
 
-  <div class="container">
-    <div class="buttons">
-      <button onclick="askConfirm(1)">Marta</button>
-      <button onclick="askConfirm(2)">Martin</button>
-      <button onclick="askConfirm(3)">Kuba</button>
-      <button onclick="askConfirm(4)">Martina</button>
-      <button onclick="askConfirm(5)">Michal</button>
+        <!-- baby icons (zůstávají nad vrstvou) -->
+        <img src="girl.jpg" alt="Hlavička holčičky" class="baby-icon girl-icon" draggable="false">
+        <img src="boy.jpg" alt="Hlavička chlapečka" class="baby-icon boy-icon" draggable="false">
+
+        <!-- skrytý originál text (pro případ potřeby) -->
+        <h1 id="display-date">14. 03. 2024</h1>
+
+        <!-- canvas, který obsahuje kopii vizuálu (text + stín + pozadí) a z něho odstraňujeme kousky -->
+        <canvas id="scratch"></canvas>
     </div>
-    <div class="output" id="output">
-      <span class="placeholder">Zatím nic nebylo vybráno...</span>
-    </div>
-  </div>
 
-  <!-- Modal -->
-  <div class="modal" id="confirmModal">
-    <div class="modal-content">
-      <p>Chceš opravdu zobrazit, kdo od tebe dostane dárek?</p>
-      <div class="modal-buttons">
-        <button class="btn-yes" onclick="confirmYes()">Ano</button>
-        <button class="btn-no" onclick="confirmNo()">Ne</button>
-      </div>
-    </div>
-  </div>
+<script>
+    const canvas = document.getElementById("scratch");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const card = document.getElementById("cardRoot");
+    const displayDate = document.getElementById("display-date");
 
-  <script>
-    let pendingNum = null; // uloží, které tlačítko bylo kliknuto
+    function resizeCanvasToCard() {
+        const rect = card.getBoundingClientRect();
+    const pad = 5; // musí sedět s CSS
 
-    const texts = {
-      1: "Martina",
-      2: "Michal",
-      3: "Marta",
-      4: "Martin",
-      5: "Kuba"
-    };
+    canvas.width = Math.round(rect.width - pad * 2);
+    canvas.height = Math.round(rect.height - pad * 2);
 
-    function askConfirm(num) {
-      pendingNum = num;
-      document.getElementById("confirmModal").style.display = "flex";
+    canvas.style.left = pad + "px";
+    canvas.style.top = pad + "px";
+    canvas.style.width = (rect.width - pad * 2) + "px";
+    canvas.style.height = (rect.height - pad * 2) + "px";
+
+    drawTopLayer();
     }
 
-    function confirmYes() {
-      if (pendingNum !== null) {
-        document.getElementById("output").textContent = texts[pendingNum];
-      }
-      closeModal();
+    // nakreslí na canvas "kopii" vzhledu data (pozadí karty + text), aby to vypadalo přesně jako originál
+    function drawTopLayer() {
+        // vyplníme plochu barvou card-bg (stejně jako originál)
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.save();
+
+        // pozadí (bílé jako .date-card)
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim() || "#ffffff";
+        roundRect(ctx, 0, 0, canvas.width, canvas.height, 20);
+        ctx.fill();
+
+        // drobný shadow simulovaný pod textem (jemný)
+        // nastavení textu (odpovídá CSS #display-date)
+        const fontSize = Math.round(canvas.height * 0.25); // upravuje velikost pro poměr
+        ctx.font = "800 " + fontSize + "px Poppins, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || "#000";
+        // jemný text-shadow simulace: nakreslíme lehký rozostřený offset
+        ctx.shadowColor = "rgba(0,0,0,0.05)";
+        ctx.shadowBlur = 4;
+        ctx.fillText(displayDate.textContent.trim(), canvas.width / 2, canvas.height / 2);
+        ctx.restore();
+
+        // vrátíme composite na normální (důležité před gumováním)
+        ctx.globalCompositeOperation = "source-over";
     }
 
-    function confirmNo() {
-      closeModal();
+    // pomocná funkce pro zaoblené rohy při kreslení pozadí
+    function roundRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
     }
 
-    function closeModal() {
-      document.getElementById("confirmModal").style.display = "none";
-      pendingNum = null;
+    // guma: nastavíme composite na destination-out a kreslíme kruhy
+    let isDrawing = false;
+    const radius = Math.max(18, Math.round(Math.min(window.devicePixelRatio * 12, 30)));
+
+    function getEventPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        if (e.touches && e.touches.length) {
+            return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+        } else {
+            return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        }
     }
-  </script>
+
+    function start(e) {
+        e.preventDefault();
+        isDrawing = true;
+        draw(e);
+    }
+    function end(e) {
+        isDrawing = false;
+        // volitelně zkontrolujeme procento odkrytí a automaticky skryjeme canvas pokud je odkrytí větší než 70%
+        checkRevealPercentage();
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+        const pos = getEventPos(e);
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2, false);
+        ctx.fill();
+        ctx.closePath();
+        ctx.globalCompositeOperation = "source-over";
+    }
+
+    // zjištění procenta průhledných pixelů (pro případ automatického odklizení)
+    function checkRevealPercentage() {
+        try {
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+            let transparent = 0;
+            for (let i = 3; i < data.length; i += 4) {
+                if (data[i] === 0) transparent++;
+            }
+            const total = canvas.width * canvas.height;
+            const percent = (transparent / total) * 100;
+            if (percent > 60) { // pokud je více než 60% odkryto, odstraníme zbytek plynule
+                fadeOutCanvas();
+            }
+        } catch (err) {
+            // některé prohlížeče mohou omezit getImageData, tady klidně nic
+        }
+    }
+
+    function fadeOutCanvas() {
+        let alpha = 1.0;
+        const step = 0.06;
+        const fade = () => {
+            alpha -= step;
+            if (alpha <= 0) {
+                // úplně pryč
+                canvas.style.display = "none";
+                return;
+            }
+            canvas.style.opacity = alpha.toString();
+            requestAnimationFrame(fade);
+        };
+        fade();
+    }
+
+    // eventy
+    canvas.addEventListener("mousedown", start, { passive: false });
+    canvas.addEventListener("touchstart", start, { passive: false });
+    window.addEventListener("mouseup", end, { passive: false });
+    window.addEventListener("touchend", end, { passive: false });
+    canvas.addEventListener("mousemove", draw);
+    canvas.addEventListener("touchmove", draw, { passive: false });
+
+    // resize handling
+    window.addEventListener("resize", () => {
+        resizeCanvasToCard();
+    });
+
+    // initial setup
+    // počkáme na fonty a obrázky (pokud nejsou dostupné), pak resize a kresba
+    window.addEventListener("load", () => {
+        // small delay, aby se načetly styly/ikonky
+        setTimeout(() => {
+            resizeCanvasToCard();
+        }, 50);
+    });
+
+    // pokud chceš, můžeš programově "resetovat" stírání
+    // function resetScratch() { canvas.style.display='block'; canvas.style.opacity='1'; drawTopLayer(); }
+
+</script>
 
 </body>
 </html>
-
